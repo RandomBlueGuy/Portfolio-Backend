@@ -6,11 +6,11 @@ const connect = () => {
   mongoose.connect(mongoUri);
 
   mongoose.connection.once("open", () => {
-    console.log("Connection with mongoDB OK");
+    console.log("Connection with mongoDB successful!");
   });
-
+  
   mongoose.connection.on("error", (error) => {
-    console.log("Something went wring", error);
+    console.log("Something went wrong", error);
   });
 
   return mongoose.connection;
