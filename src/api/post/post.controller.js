@@ -174,9 +174,14 @@ module.exports = {
          );
 
          if (!post) {
-           throw new Error(`Post / Comment not found`);
+           throw new Error(`Post with id# => ${postId} not found`);
          }
-         
+
+         const comment = post.comments.find(comment => comment._id == commentId);
+         if (!comment) {
+            throw new Error(`Comment with id# => ${commentId} not found`);
+         }
+
       res
       .status(200)
       .json({
