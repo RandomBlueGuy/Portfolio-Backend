@@ -166,8 +166,6 @@ module.exports = {
   async deleteComment(req, res) {
     try {
       const { postId, commentId } = req.params;
-
-      // const post = await Posts.findOne({"comments._id": commentId });
       
       const post = await Posts.findOneAndUpdate(
          { _id: postId },
