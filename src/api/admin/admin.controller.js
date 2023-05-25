@@ -42,9 +42,8 @@ module.exports = {
         admin,
       });
     } catch (error) {
-      res.status(400).json({
-        message: "We couldn't create this user",
-        error: error.message,
+      res.status(500).json({
+        message: `We couldn't create this user, ${error}`,
       });
     }
   },
@@ -52,7 +51,7 @@ module.exports = {
   //LOG USER
   async signIn(req, res) {
     try {
-      const { email, password } = req.body;
+      const { userName, password } = req.body;
 
       const admin = await Admin.findOne({ userName });
 
@@ -60,23 +59,22 @@ module.exports = {
         throw new Error("UserName or password invalid");
       }
 
-      const isValid = await bcrypt.compare(password, user.password);
+      const isValid = await bcrypt.compare(password, admin.password);
 
       if (!isValid) {
         throw new Error("UserName or password invalid");
       }
 
-      const token = jwt.sign({ id: user._id }, process.env.ACCESS_KEY, {
-        expiresIn: 60 * 60 * 24,
+      const token = jwt.sign({ id: admin._id }, process.env.ACCESS_KEY, {
+        expiresIn: 3600,
       });
 
       res
         .status(200)
-        .json({ message: `Welcome back ${user.userName}!`, token });
+        .json({ message: `Welcome back ${admin.userName}!`, token });
     } catch (error) {
-      res.status(400).json({
-        message:
-          "Login unsuccessful! The information provided doessn't have a match in our DB",
+      res.status(500).json({
+        error,
       });
     }
   },
@@ -84,37 +82,21 @@ module.exports = {
   //GET USER INFO
   async getUserData(req, res) {
     try {
-      if (req.body.secretKey !== process.env.ACCESS_KEY) {
-        throw new Error("INVALID ACCESS!");
-      }
 
       const users = await Admin.find();
 
       res.status(201).json({ message: "Success!", users });
     } catch (error) {
-      res.status(400).json(error.message);
+      res.status(500).json(error.message);
     }
   },
 
   // UPDATE USER
   async updateUserInfo(req, res) {
     try {
-      let isDeleted = false;
+
       const { userId } = req.params;
-      const encPassword = await bcrypt.hash(req.body.password, 8);
-
-      const updatedData = {
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        userName: req.body.userName,
-        password: encPassword,
-        location: req.body.location,
-        profilePicture: req.body.profilePicture,
-      };
-
-      if (req.body.secretKey !== process.env.ACCESS_KEY) {
-        throw new Error("INVALID ACCESS!");
-      }
+      const updatedData = req.body;
 
       const updatedUser = await Admin.findByIdAndUpdate(userId, updatedData, {
         new: true,
@@ -128,38 +110,27 @@ module.exports = {
 
       res.status(200).json({ message: "User updated", updatedUser });
     } catch (error) {
-      res.status(400).json({
+      res.status(500).json({
         message: "Sorry! We couldn't update the user",
       });
     }
   },
 
+  //DELETE USER
   async deleteUser(req, res) {
     try {
       const { userId } = req.params;
 
-      if (req.body.secretKey !== process.env.ACCESS_KEY) {
-        throw new Error("INVALID ACCESS!");
-      }
-
-      // Admin.findByIdAndDelete(
-      //   userId,
-      //   (isDeleted = (error) => {
-      //     return error ? false : true;
-      //   })
-      // );
-
       const result = await Admin.findByIdAndDelete(userId);
       const isDeleted = result ? true : false;
 
-      console.log(
-        "🔷 / file: admin.controller.js:155 / deleteUser / isDeleted =>",
-        isDeleted
-      );
-
-      res.status(200).json({ message: `User deleted successfully` });
+      if (result !== null) {
+        res.status(200).json({ message: `User deleted successfully` });
+      } else {
+        throw new Error("User not found!");
+      }
     } catch (error) {
-      res.status(400).json(error.message);
+      res.status(500).json({message: `User deletion failed! ${error}`});
     }
   },
 };
