@@ -1,21 +1,13 @@
 const { Schema, model, models } = require("mongoose");
 
-const postSchema = new Schema({
-  title: {
+const blogSchema = new Schema({
+  blogContent: {
     type: String,
-    required: [true, "A post title is always needed"],
-    maxlength: [100, "A post should not exceed 100 characters length"],
+    required: [true, "A blog always needs content"],
   },
 
-  description: {
-    type: String,
-    required: [true, "A post description is always needed"],
-    maxlength: [1000, "A post should not exceed 1000 characters length"],
-  },
-
-  postImage: {
-    type: String,
-    required: [true, "A post image is always needed"],
+  blogImages: {
+    type: [String]
   },
 
   tags: {
@@ -49,6 +41,6 @@ const postSchema = new Schema({
   },
 });
 
-const Posts = model("posts", postSchema);
+const Blogs = model("blogs", blogSchema);
 
-module.exports = Posts;
+module.exports = Blogs;

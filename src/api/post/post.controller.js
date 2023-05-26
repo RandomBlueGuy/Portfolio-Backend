@@ -1,5 +1,3 @@
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const Posts = require("./post.model");
 
 module.exports = {
@@ -63,10 +61,13 @@ module.exports = {
 
     try {
       const updatedData = req.body;
-
-      const updatedPost = await Posts.findByIdAndUpdate(postId, updatedData, {
-        new: true,
-      });
+      const updatedDataWithDate = { ...updatedData, datePosted: new Date() };
+      
+      const updatedPost = await Posts.findByIdAndUpdate(
+        postId,
+        updatedDataWithDate,
+        { new: true }
+      );
 
       if (updatedPost === null) {
         throw new Error("!");
@@ -147,18 +148,14 @@ module.exports = {
 
       post.comments.push({ commenter, comment, date: new Date() });
       const updatedPost = await post.save();
-      res
-        .status(200)
-        .json({
-          message: `Comment added successfully`,
-          comments: updatedPost.comments,
-        });
+      res.status(200).json({
+        message: `Comment added successfully`,
+        comments: updatedPost.comments,
+      });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          message: `There was an error while trying to add the comment. ${error}`,
-        });
+      res.status(500).json({
+        message: `There was an error while trying to add the comment. ${error}`,
+      });
     }
   },
 
@@ -166,38 +163,29 @@ module.exports = {
   async deleteComment(req, res) {
     try {
       const { postId, commentId } = req.params;
-      
+
       const post = await Posts.findOneAndUpdate(
-         { _id: postId },
-         { $pull: { comments: { _id: commentId } } },
-         { new: true }
-         );
+        { _id: postId },
+        { $pull: { comments: { _id: commentId } } },
+        { new: true }
+      );
 
-         if (!post) {
-           throw new Error(`Post with id# => ${postId} not found`);
-         }
+      if (!post) {
+        throw new Error(`Post with id# => ${postId} not found`);
+      }
 
-         const comment = post.comments.find(comment => comment._id == commentId);
-         if (!comment) {
-            throw new Error(`Comment with id# => ${commentId} not found`);
-         }
+      const comment = post.comments.find((comment) => comment._id == commentId);
+      if (!comment) {
+        throw new Error(`Comment with id# => ${commentId} not found`);
+      }
 
-      res
-      .status(200)
-      .json({
-        message: `Comment deleted successfully`
+      res.status(200).json({
+        message: `Comment deleted successfully`,
       });
     } catch (error) {
       res
         .status(500)
         .json({ message: `The comment could not be deleted. ${error}` });
-    }
-  },
-
-  async XXXX(req, res) {
-    try {
-    } catch (error) {
-      res.status(500).json({ message: ` ${error}` });
     }
   },
 };
