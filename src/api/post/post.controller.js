@@ -6,7 +6,7 @@ module.exports = {
     try {
       const { title, description, postImage, tags } = req.body;
 
-      if (!itle || !description || !postImage || !tags) {
+      if (!title || !description || !postImage || !tags) {
         throw new Error("Some relevant data is missing")
       }
 
