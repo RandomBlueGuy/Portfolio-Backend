@@ -6,6 +6,10 @@ module.exports = {
     try {
       const { title, description, postImage, tags } = req.body;
 
+      if (!itle || !description || !postImage || !tags) {
+        throw new Error("Some relevant data is missing")
+      }
+
       const newPost = await Posts.create({
         title,
         description,
@@ -19,7 +23,7 @@ module.exports = {
       });
     } catch (error) {
       res.status(500).json({
-        message: "Post could not be created",
+        message: `Post could not be created! ${error.message}`,
       });
     }
   },
@@ -41,6 +45,10 @@ module.exports = {
       const { postId } = req.params;
 
       const post = await Posts.findById(postId);
+
+      if(post === null){
+        throw new Error("!");
+      }
 
       res.status(201).json({ message: "Success!", post });
     } catch (error) {
@@ -87,9 +95,9 @@ module.exports = {
   async deletePost(req, res) {
     try {
       const { postId } = req.params;
-      const result = await Posts.findByIdAndDelete(postId);
+      const postSelectedForDeletion = await Posts.findByIdAndDelete(postId);
 
-      if (result === null) {
+      if (postSelectedForDeletion === null) {
         throw new Error("There is no post with that id!");
       }
 
@@ -141,11 +149,6 @@ module.exports = {
         throw new Error(`The comment has a missing component`);
       }
 
-      console.log(
-        "🔷 / file: post.controller.js:138 / addComment / req.body =>",
-        req.body
-      );
-
       post.comments.push({ commenter, comment, date: new Date() });
       const updatedPost = await post.save();
       res.status(200).json({
@@ -172,11 +175,6 @@ module.exports = {
 
       if (!post) {
         throw new Error(`Post with id# => ${postId} not found`);
-      }
-
-      const comment = post.comments.find((comment) => comment._id == commentId);
-      if (!comment) {
-        throw new Error(`Comment with id# => ${commentId} not found`);
       }
 
       res.status(200).json({

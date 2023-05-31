@@ -1,195 +1,178 @@
 const Blogs = require("./blog.model");
 
 module.exports = {
-  //CREATE POST
-  // async createBlog(req, res) {
+  async createBlog(req, res) {
+    try {
+      const { blogContent, blogImages, tags } = req.body;
 
-    // try {
-    //   const { blogContent, blogImages, blogImage, tags } = req.body;
-    //   const newBlog = await Blogs.create({
-    //     blogContent,
-    //     blogImages,
-    //     blogImage,
-    //     tags,
-    //   });
+      if (!blogContent || !blogImages || !tags) {
+        throw new Error("Some relevant data is missing");
+      }
 
-    //   res.status(201).json({
-    //     message: "Blog created Successfully!",
-    //     newBlog,
-    //   });
-    // } catch (error) {
-    //   res.status(500).json({
-    //     message: "Blog could not be created",
-    //   });
-    // }
-  // },
+      const newBlog = await Blogs.create({
+        blogContent,
+        blogImages,
+        tags,
+      });
 
-  //READ POSTS
-  // async getBlogData(_, res) {
-  //   try {
-  //     const blogs = await Blogs.find();
-  //     res.status(201).json({ message: "Success!", blogs });
-  //   } catch (error) {
-  //     res.status(500).json({
-  //       message: "Blogs were not retrieved",
-  //     });
-  //   }
-  // },
+      res.status(201).json({
+        message: "Blog created Successfully!",
+        newBlog,
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: `Blog could not be created! ${error.message}`,
+      });
+    }
+  },
 
-  // async getBlogDataById(req, res) {
-  //   try {
-  //     const { blogId } = req.params;
+  async getBlogData(_, res) {
+    try {
+      const blogs = await Blogs.find();
+      res.status(201).json({ message: "Success!", blogs });
+    } catch (error) {
+      res.status(500).json({
+        message: `Blogs could not be retrieved!`,
+      });
+    }
+  },
 
-  //     const blog = await Blogs.findById(blogId);
+  async getBlogDataById(req, res) {
+    try {
+      const { blogId } = req.params;
+      const blog = await Blogs.findById(blogId);
 
-  //     res.status(201).json({ message: "Success!", blog });
-  //   } catch (error) {
-  //     res.status(500).json({
-  //       message: `The blog with id=> ${blogId} could not be retrieved!`,
-  //     });
-  //   }
-  // },
+      if (blog === null) {
+        throw new Error("!");
+      }
 
-  // //UPDATE POST
-  // async updateBlogInfo(req, res) {
-  //   const [_, token] = req.headers.authorization.split(" ");
-  //   const { blogId } = req.params;
+      res.status(201).json({ message: "Success!", blog });
+    } catch (error) {
+      res.status(500).json({ message: `Blog could not be retrieved!` });
+    }
+  },
 
-  //   if (!token) {
-  //     return res.status(401).json({ message: "Missing authorization token!" });
-  //   }
+  async updateBlogInfo(req, res) {
+    const [_, token] = req.headers.authorization.split(" ");
+    const { blogId } = req.params;
 
-  //   try {
-  //     const updatedData = req.body;
+    if (!token) {
+      return res.status(401).json({ message: "Missing authorization token!" });
+    }
 
-  //     const updatedBlog = await Blogs.findByIdAndUpdate(blogId, updatedData, {
-  //       new: true,
-  //     });
+    try {
+      const updatedData = req.body;
+      const updatedDataWithDate = { ...updatedData, datePosted: new Date() };
 
-  //     if (updatedBlog === null) {
-  //       throw new Error("!");
-  //     }
+      const updatedBlog = await Blogs.findByIdAndUpdate(
+        blogId,
+        updatedDataWithDate,
+        { new: true }
+      );
 
-  //     res
-  //       .status(201)
-  //       .json({ message: "Blog updated successfully!", updatedBlog });
-  //   } catch (error) {
-  //     res.status(500).json({
-  //       message: `There is no blog with id# => ${blogId}${error.message}`,
-  //     });
-  //   }
-  // },
+      if (updatedBlog === null) {
+        throw new Error("There is no blog with that Id");
+      }
 
-  // //DELETE POST
-  // async deleteBlog(req, res) {
-  //   try {
-  //     const { blogId } = req.params;
-  //     const result = await Blogs.findByIdAndDelete(blogId);
+      res
+        .status(201)
+        .json({ message: "Blog updated successfully!", updatedBlog });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: `Blog could not be updated${error.message}` });
+    }
+  },
 
-  //     if (result === null) {
-  //       throw new Error("There is no blog with that id!");
-  //     }
+  async deleteBlog(req, res) {
+    try {
+      const { blogId } = req.params;
+      const blogSelectedForDeletion = await Blogs.findByIdAndDelete(blogId);
 
-  //     res.status(200).json({ message: `Blog deleted successfully` });
-  //   } catch (error) {
-  //     res.status(500).json({ message: `The blog was not deleted. ${error}` });
-  //   }
-  // },
+      if (blogSelectedForDeletion === null) {
+        throw new Error("There is no blog with that id!");
+      }
 
-  // //ADD LIKE
+      res.status(200).json({ message: `Blog deleted successfully` });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: `Blog could not be deleted! ${error.message}` });
+    }
+  },
 
-  // async addLikes(req, res) {
-  //   try {
-  //     const { blogId } = req.params;
+  async addLikes(req, res) {
+    try {
+      const { blogId } = req.params;
 
-  //     if (!req.body.like) {
-  //       throw new Error("!");
-  //     }
+      if (!req.body.like) {
+        throw new Error("!");
+      }
 
-  //     await Blogs.findByIdAndUpdate(blogId, {
-  //       $inc: { likes: 1 },
-  //     });
+      await Blogs.findByIdAndUpdate(blogId, {
+        $inc: { likes: 1 },
+      });
 
-  //     const updatedBlog = await Blogs.findById(blogId);
-  //     res
-  //       .status(200)
-  //       .json({ message: `Like added. Total likes: ${updatedBlog.likes}` });
-  //   } catch (error) {
-  //     res.status(500).json({
-  //       message: `There was an error and we could not process your like ${error}`,
-  //     });
-  //   }
-  // },
+      const updatedBlog = await Blogs.findById(blogId);
+      res
+        .status(200)
+        .json({ message: `Like added. Total likes: ${updatedBlog.likes}` });
+    } catch (error) {
+      res.status(500).json({
+        message: `There was an error and we could not process your like ${error}`,
+      });
+    }
+  },
 
-  // //COMMENT SUBPLOT
-  // //CREATE COMMENT
-  // async addComment(req, res) {
-  //   try {
-  //     const { blogId } = req.params;
-  //     const blog = await Blogs.findById(blogId);
+  async addComment(req, res) {
+    try {
+      const { blogId } = req.params;
+      const blog = await Blogs.findById(blogId);
 
-  //     if (!blog) {
-  //       throw new Error(`There is no blog with and id => ${blogId}`);
-  //     }
+      if (!blog) {
+        throw new Error(`There is no blog with and id => ${blogId}`);
+      }
 
-  //     const { commenter, comment } = req.body;
+      const { commenter, comment } = req.body;
 
-  //     if (!commenter || !comment) {
-  //       throw new Error(`The comment has a missing component`);
-  //     }
+      if (!commenter || !comment) {
+        throw new Error(`The comment has a missing component`);
+      }
 
-  //     console.log(
-  //       "🔷 / file: blog.controller.js:138 / addComment / req.body =>",
-  //       req.body
-  //     );
+      blog.comments.push({ commenter, comment, date: new Date() });
+      const updatedBlog = await blog.save();
+      res.status(200).json({
+        message: `Comment added successfully`,
+        comments: updatedBlog.comments,
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: `There was an error while trying to add the comment. ${error}`,
+      });
+    }
+  },
 
-  //     blog.comments.push({ commenter, comment, date: new Date() });
-  //     const updatedBlog = await blog.save();
-  //     res.status(200).json({
-  //       message: `Comment added successfully`,
-  //       comments: updatedBlog.comments,
-  //     });
-  //   } catch (error) {
-  //     res.status(500).json({
-  //       message: `There was an error while trying to add the comment. ${error}`,
-  //     });
-  //   }
-  // },
+  async deleteBlogComment(req, res) {
+    try {
+      const { blogId, commentId } = req.params;
 
-  // //DELETE COMMENT
-  // async deleteComment(req, res) {
-  //   try {
-  //     const { blogId, commentId } = req.params;
+      const blog = await Blogs.findOneAndUpdate(
+        { _id: blogId },
+        { $pull: { comments: { _id: commentId } } },
+        { new: true }
+      );
 
-  //     const blog = await Blogs.findOneAndUpdate(
-  //       { _id: blogId },
-  //       { $pull: { comments: { _id: commentId } } },
-  //       { new: true }
-  //     );
+      if (!blog) {
+        throw new Error(`Blog or comment id's do not match the content in the db`);
+      }
 
-  //     if (!blog) {
-  //       throw new Error(`Blog with id# => ${blogId} not found`);
-  //     }
-
-  //     const comment = blog.comments.find((comment) => comment._id == commentId);
-  //     if (!comment) {
-  //       throw new Error(`Comment with id# => ${commentId} not found`);
-  //     }
-
-  //     res.status(200).json({
-  //       message: `Comment deleted successfully`,
-  //     });
-  //   } catch (error) {
-  //     res
-  //       .status(500)
-  //       .json({ message: `The comment could not be deleted. ${error}` });
-  //   }
-  // },
-
-  // async XXXX(req, res) {
-  //   try {
-  //   } catch (error) {
-  //     res.status(500).json({ message: ` ${error}` });
-  //   }
-  // },
+      res.status(200).json({
+        message: `Comment deleted successfully`,
+      });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: `The comment could not be deleted. ${error}` });
+    }
+  },
 };

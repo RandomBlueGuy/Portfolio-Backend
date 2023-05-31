@@ -5,7 +5,7 @@ const PORT = 8080;
 
 const startSever = () => {
   server.listen(PORT, () => {
-    console.log(`🔷 / App running in PORT => ${PORT} 🔷`);
+    console.log(`🔷 > App running in PORT => ${PORT} < 🔷`);
   });
 };
 
