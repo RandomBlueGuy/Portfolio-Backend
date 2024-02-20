@@ -1,64 +1,66 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const Admin = require('./admin.model');
+const user = require('./user.model');
 
 module.exports = {
   //CREATE USER
   async signUp(req, res) {
     try {
-      const { fullName, email, password } = req.body;
+      const { firstName, lastName, email, mobile } = req.body;
 
-      const otheruser = await Admin.findOne({ email });
+      // if (secretKey !== process.env.ACCESS_KEY) {
+      //   throw new Error("INVALID ACCESS!");
+      // }
+
+      const otheruser = await user.findOne({ email });
 
       if (otheruser) {
         throw new Error('This email is already registered');
       }
 
-      const encPassword = await bcrypt.hash(password, 8);
-      const createdAt = new Date(Date.now()).toString();
-      
-      const admin = await Admin.create({
-        fullName,
+      // const encPassword = await bcrypt.hash(password, 8);
+
+      const user = await user.create({
+        firstName,
+        lastName,
         email,
-        encPassword,
         mobile,
-        createdAt,
+        createdAt: `${new Date(Date.now()).toString()}`,
       });
 
       res.status(201).json({
-        message: 'admin Created Successfully',
-        admin,
+        message: 'User Created Successfully',
+        user,
       });
     } catch (error) {
       res.status(500).json({
-        message: `We couldn't create this admin, ${error}`,
+        message: `We couldn't create this user, ${error}`,
       });
     }
   },
 
-
   //LOG USER
   async signIn(req, res) {
     try {
-      const { userName, password } = req.body;
+      const { email, password } = req.body;
 
-      const admin = await Admin.findOne({ userName });
+      const user = await user.findOne({ email });
 
-      if (!admin) {
-        throw new Error('UserName or password invalid');
+      if (!user) {
+        throw new Error('email or password invalid');
       }
 
-      const isValid = await bcrypt.compare(password, admin.password);
+      const isValid = await bcrypt.compare(password, user.password);
 
       if (!isValid) {
-        throw new Error('UserName or password invalid');
+        throw new Error('email or password invalid');
       }
 
-      const token = jwt.sign({ id: admin._id }, process.env.ACCESS_KEY, {
+      const token = jwt.sign({ id: user._id }, process.env.ACCESS_KEY, {
         expiresIn: 3600,
       });
 
-      res.status(200).json({ message: `Welcome back ${admin.userName}!`, token });
+      res.status(200).json({ message: `Welcome back ${user.email}!`, token });
     } catch (error) {
       res.status(500).json({
         error,
@@ -69,7 +71,7 @@ module.exports = {
   //GET USER INFO
   async getUserData(req, res) {
     try {
-      const users = await Admin.find();
+      const users = await user.find();
 
       res.status(201).json({ message: 'Success!', users });
     } catch (error) {
@@ -83,7 +85,7 @@ module.exports = {
       const { userId } = req.params;
       const updatedData = req.body;
 
-      const updatedUser = await Admin.findByIdAndUpdate(userId, updatedData, {
+      const updatedUser = await user.findByIdAndUpdate(userId, updatedData, {
         new: true,
       });
 
@@ -104,7 +106,7 @@ module.exports = {
     try {
       const { userId } = req.params;
 
-      const result = await Admin.findByIdAndDelete(userId);
+      const result = await user.findByIdAndDelete(userId);
       const isDeleted = result ? true : false;
 
       if (result !== null) {

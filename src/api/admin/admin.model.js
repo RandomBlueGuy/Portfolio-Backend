@@ -1,16 +1,10 @@
 const { Schema, model, models } = require("mongoose");
 
 const adminSchema = new Schema({
-  firstName: {
+  fullName: {
     type: String,
     required: [true, "You need to have a valid firstName"],
-    maxlength: [15, "The first name provided is too long"],
-  },
-
-  lastName: {
-    type: String,
-    required: [true, "You need to have a valid firstName"],
-    maxlength: [15, "The first name provided is too long"],
+    maxlength: [30, "The first name provided is too long"],
   },
 
   userName: {
@@ -23,13 +17,6 @@ const adminSchema = new Schema({
     required: true,
   },
 
-  location: {
-    type: String,
-  },
-
-  profilePicture: {
-    type: String,
-  },
 });
 
 const Admin = model("admin", adminSchema);
